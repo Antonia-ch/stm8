@@ -1,0 +1,109 @@
+#include "iostm8s208mb.h"//主控芯片的头文件
+
+#define u8  uint8_t
+#define u16 uint16_t
+#define u32 uint32_t
+typedef unsigned char    uint8_t;
+typedef unsigned short   uint16_t;
+typedef unsigned long    uint32_t;
+
+#define LCDRS PF_ODR_ODR0//命令数据选择引脚
+#define LCDRW PF_ODR_ODR3//读写选择引脚
+#define LCDEN PF_ODR_ODR4//使能引脚
+#define LCDDATA PB_ODR//数据端口DO-D7
+
+u8 table1[]="happy";//LCD1602显示字符串数组1显示效果用
+u8 table2[]="   welcome      ";//LCD1602显示字符串数组2显示效果用
+
+
+void LCD1602_Write(u8 cmdordata,u8 writetype);
+void  LCD1602_init(void);
+void LCD1602_DIS(void);
+void delay(u16 Count);
+
+
+int main(void)
+{
+  //rs初始化
+  PF_DDR_DDR0=1;//输出模式
+  PF_CR1_C10=1;//推挽输出
+  PF_CR2_C20=0;//低斜率输出
+   
+  //rw初始化
+  PF_DDR_DDR3=1;//输出模式
+  PF_CR1_C13=1;//推挽输出
+  PF_CR2_C23=0;//低斜率输出
+  LCDRW = 0;//写入模式
+  
+   //en初始化
+  PF_DDR_DDR4=1;//输出模式
+  PF_CR1_C14=1;//推挽输出
+  PF_CR2_C24=0;//低斜率输出
+  
+   //PD初始化
+  PB_DDR=0xFF;//输出模式
+  PB_CR1=0xFF;//推挽输出
+  PB_CR2=0x00;//低斜率输出
+  PB_ODR=0xFF;//高频率
+  LCDDATA=0xFF;
+  
+  LCD1602_init();       //LCD1602初始化
+  LCD1602_DIS();        //显示字符
+  while(1);
+}
+
+void LCD1602_Write(u8 cmdordata,u8 writetype)
+{
+  if(writetype==0)
+  {
+    LCDRS=0;//写命令
+  }
+  else
+  {
+    LCDRS=1;//写数据
+  }
+  
+  LCDDATA=cmdordata;
+  delay(5);//延时带稳定
+  LCDEN=1;
+  delay(5);
+  LCDEN=0;
+  
+}
+
+void  LCD1602_init(void)
+{
+  LCD1602_Write(0x38,0);//配置16*2显示，5*7点阵，8位数据接口
+  LCD1602_Write(0x0C,0);//设置开显示，不显示光标
+  LCD1602_Write(0x06,0);//写字符后地址自动加1
+  LCD1602_Write(0x01,0);//显示清0，数据指针清0
+}
+
+void LCD1602_DIS(void)
+{
+  u8 i;//定义控制循环变量i
+  LCD1602_Write(0x80,0);//选择第一行
+  for(i=0;i<16;i++)
+  {
+    LCD1602_Write(table1[i],1);
+    delay(5);
+  }
+  
+  LCD1602_Write(0xC0,0);//选择第二行
+  for(i=0;i<16;i++)
+  {
+    LCD1602_Write(table2[i],1);
+    delay(5);
+  }
+}
+
+void delay(u16 Count)//延时函数
+{
+  u8 i,j;
+  while (Count--)//Count形参控制延时次数
+  {
+    for(i=0;i<50;i++)
+      for(j=0;j<20;j++);
+  }
+}
+
