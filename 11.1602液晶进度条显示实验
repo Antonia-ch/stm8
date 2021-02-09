@@ -1,0 +1,109 @@
+#include "iostm8s208mb.h"
+
+#define u8 uint8_t
+#define u16 uint16_t
+#define u32 uint32_t
+
+typedef unsigned char uint8_t;
+typedef unsigned short uint16_t;
+typedef unsigned long uint32_t;
+
+#define LCDRS PF_ODR_ODR0//命令or数据
+#define LCDRW PF_ODR_ODR3//写or读
+#define LCDEN PF_ODR_ODR4//使能
+#define LCDDATA PB_ODR
+
+void Write(u8 cmdordata,u8 type);
+void LCD1602_init(void);
+void LCD1602_Dis(void);
+void delay(u16 Count);
+
+u8 table[]="==System  init==";
+
+int main(void)
+{
+  //RS
+  PF_DDR_DDR0=1;//输出模式
+  PF_CR1_C10=1;//推挽输出
+  PF_CR2_C20=0;//低斜率输出
+  
+  //RW
+  PF_DDR_DDR3=1;//输出模式
+  PF_CR1_C13=1;//推挽输出
+  PF_CR2_C23=0;//低斜率输出
+  LCDRW=0;//写入模式
+  
+  //en
+  PF_DDR_DDR4=1;//输出模式
+  PF_CR1_C14=1;//推挽输出
+  PF_CR2_C24=0;//低斜率输出
+  
+  //
+  PB_DDR=0xFF;//输出模式
+  PB_CR1=0xFF;//推挽输出
+  PB_CR2=0x00;//低斜率输出
+  LCDDATA=0xFF;//高电平
+  
+  LCD1602_init();//1602初始化
+  LCD1602_Dis();//1602显示
+  while(1);
+  
+}
+
+void Write(u8 cmdordata,u8 type)
+{
+  if(type==0)
+  {
+     LCDRS=0;//命令
+  }
+  else
+  {
+    LCDRS=1;//数据
+  }
+  LCDDATA=cmdordata;
+  delay(5);
+  LCDEN=1;
+  delay(5);
+  LCDEN=0;
+}
+
+void LCD1602_init(void)
+{
+  Write(0x38,0);//配置16*2显示，5*7点阵，8位数据接口
+  Write(0x0C,0);//设置开显示，不显示光标
+  Write(0x06,0);//写字符后地址自动加1
+  Write(0x01,0);//显示清0，数据指针清0
+}
+
+
+void LCD1602_Dis(void)
+{
+  u8 i;
+  Write(0x80,0);//定位第一行
+  for(i=0;i<16;i++)
+  {
+    Write(table[i],1);
+    delay(5);
+  }
+  
+  Write(0xC0,0);//定位第二行
+  for(i=0;i<16;i++)
+  {
+    Write('>',1);
+    delay(50);
+  }
+  
+}
+
+void delay(u16 Count)
+{
+  u8 i,j;
+  
+  while(Count--)
+  {
+    for(i=0;i<50;i++)
+    {
+      for(j=0;j<20;j++);
+    }
+  }
+}
