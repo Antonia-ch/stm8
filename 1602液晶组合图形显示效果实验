@@ -1,0 +1,127 @@
+#include "iostm8s208mb.h"
+
+#define u8 uint8_t
+#define u16 uint16_t
+#define u32 uint32_t
+
+typedef unsigned char uint8_t;
+typedef unsigned short uint16_t;
+typedef unsigned long uint32_t;
+
+#define  LCDRS          PF_ODR_ODR0     //LCD1602数据/命令选择端口
+#define  LCDRW          PF_ODR_ODR3     //LCD1602读写控制端口
+#define  LCDEN          PF_ODR_ODR4     //LCD1602使能信号端口
+#define  LCDDATA        PB_ODR          //LCD1602数据端口D0至D7
+
+void LCD1602_write(u8 cmdordata,u8 writetype);
+void LCD1602_init(void);
+void LCD1602_DIS_FACE(void);
+void LCD1602_DIS_CHAR(u8 x,u8 y,u8 z);
+void delay(u8 Count);
+
+int main(void)
+{
+  PF_DDR_DDR0=1;        //配置PF0为输出模式
+  PF_CR1_C10=1;         //配置PF0为推挽输出模式
+  PF_CR2_C20=0;         //配置PF0低速率输出
+  
+  PF_DDR_DDR3=1;        //配置PF3为输出模式
+  PF_CR1_C13=1;         //配置PF3为推挽输出模式
+  PF_CR2_C23=0;         //配置PF3低速率输出
+  LCDRW=0;              //配置LCD1602为写入模式
+  
+  PF_DDR_DDR4=1;        //配置PF4为输出模式
+  PF_CR1_C14=1;         //配置PF4为推挽输出模式
+  PF_CR2_C24=0;         //配置PF4低速率输出
+  
+  PB_DDR=0xFF;          //配置PB端口为输出模式
+  PB_CR1=0xFF;          //配置PB端口为推挽输出模式
+  PB_CR2=0x00;          //配置PB端口低速率输出
+  LCDDATA=0xFF;         //初始化PB端口全部输出高电平
+  
+  LCD1602_init();
+  LCD1602_DIS_FACE();
+  while(1);
+ 
+}
+
+void LCD1602_write(u8 cmdordata,u8 writetype)
+{
+  if(writetype==0)
+  {
+    LCDRS=0;//命令
+  }
+  else
+  {
+    LCDRS=1;//数据
+  }
+  LCDDATA=cmdordata;
+  delay(50);
+  LCDEN=1;
+  delay(50);
+  LCDEN=0;
+}
+
+void LCD1602_init(void)
+{
+  LCD1602_write(0x38,0);//配置16*2显示，5*7点阵，8位数据接口
+  LCD1602_write(0x0C,0);//设置开显示，不显示光标
+  LCD1602_write(0x06,0);//写字符后地址自动加1
+  LCD1602_write(0x01,0);//显示清0，数据指针清0
+}
+
+void LCD1602_DIS_FACE(void)
+{
+  LCD1602_DIS_CHAR(1,1,'*');
+  LCD1602_DIS_CHAR(2,2,'.');
+  LCD1602_DIS_CHAR(1,3,'*');
+  LCD1602_DIS_CHAR(1,4,'|');
+  LCD1602_DIS_CHAR(2,4,'|');
+  LCD1602_DIS_CHAR(1,5,'*');
+  LCD1602_DIS_CHAR(2,6,'_');
+  LCD1602_DIS_CHAR(1,7,'*');
+  LCD1602_DIS_CHAR(1,8,'|');
+  LCD1602_DIS_CHAR(2,8,'|');
+  LCD1602_DIS_CHAR(1,9,'*');
+  LCD1602_DIS_CHAR(2,10,'x');
+  LCD1602_DIS_CHAR(1,11,'*');
+  LCD1602_DIS_CHAR(1,12,'|');
+  LCD1602_DIS_CHAR(2,12,'|');
+  LCD1602_DIS_CHAR(1,13,'*');
+  LCD1602_DIS_CHAR(2,14,'v');
+  LCD1602_DIS_CHAR(1,15,'*'); 
+  
+}
+
+void LCD1602_DIS_CHAR(u8 x,u8 y,u8 z)
+{
+  u8 address;
+  if(x==1)
+  {
+    address=0x80+y;
+  }
+  else
+  {
+    address=0xC0+y;
+  }
+  LCD1602_write(address,0);
+  LCD1602_write(z,1);
+  
+}
+
+
+void delay(u8 Count)
+{
+  u8 i;
+  u8 j;
+  
+  while(Count--)
+  {
+    for(i=0;i<50;i++)
+    {
+      
+      for(j=0;j<20;j++);
+    }
+  }
+}
+
