@@ -1,0 +1,89 @@
+#include "iostm8s208mb.h"
+
+#define u8 uint8_t
+#define u16 uint16_t
+#define u32 uint32_t
+
+typedef unsigned char uint8_t;
+typedef unsigned short uint16_t;
+typedef unsigned long uint32_t;
+
+#define LED PB_ODR
+#define KEY1 PC_IDR_IDR0
+#define KEY8 PC_IDR_IDR1
+
+void delay(u16 Count);
+
+u8 tableA[]={0x3F,0x06,0x5B,0x4F,0x66,0x6D,0x7D,0x07,0x7F,0x6F};
+
+int main(void)
+{
+  //led
+  PB_DDR=0xFF;//输出模式
+  PB_CR1=0xFF;//推挽
+  PB_CR2=0x00;//低斜率
+  PB_ODR=tableA[0];//初始化
+  
+  //KEY1
+  PC_DDR_DDR0=0;//输入模式
+  PC_CR1_C10=1;//带上拉的输入模式
+  PC_CR2_C20=0; // 外中断禁止
+  
+  //KEY8
+  PC_DDR_DDR1=0;//输入模式
+  PC_CR1_C11=1;//带上拉的输入模式
+  PC_CR2_C22=0;//外中断禁止
+  
+  u8 i;
+  
+  while(1)
+  {
+    if(KEY1==0)
+    {
+      delay(50);
+      if(KEY1==0)
+      {
+        if(i>=9)
+        {
+          i=0;
+        }
+        else
+        {
+         i=i+1; 
+        } 
+        LED=tableA[i];
+        while(!KEY1);
+      }
+    }
+    
+    if(KEY8==0)
+    {
+      delay(50);
+      if(KEY8==0)
+      {
+        if(i==0)
+        {
+          i=0;
+        }
+        else
+        {
+          i=i-1;
+        }
+        LED=tableA[i];
+        while(!KEY8);
+      }
+    }
+    
+  }
+}
+
+
+void delay(u16 Count)//延时函数
+{
+  u8 i,j;
+  while (Count--)//Count形参控制延时次数
+  {
+    for(i=0;i<50;i++)
+      for(j=0;j<20;j++);
+  }
+}
